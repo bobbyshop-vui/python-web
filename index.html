@@ -12,14 +12,17 @@
                 const pyodide = await loadPyodide();
 
                 // Load necessary Python packages
-                await pyodide.loadPackage(["numpy", "matplotlib"]);
+                await pyodide.loadPackage(["numpy", "matplotlib", "PIL"]);
 
-                // Define Python script for generating 3D sphere data
+                // Define Python script for generating 3D sphere data and encoding image to Base64
                 const pythonScript = `
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import math
+import io
+import base64
+from PIL import Image
 
 # Tạo dữ liệu hình cầu
 theta = np.linspace(0, 2 * math.pi, 100)
@@ -38,22 +41,29 @@ ax = fig.add_subplot(111, projection='3d')
 ax.plot_surface(X, Y, Z, cmap='cool')
 
 # Lưu hình ảnh vào bộ nhớ dưới dạng PNG
-img_path = '/tmp/sphere.png'
-fig.savefig(img_path)
+img_buffer = io.BytesIO()
+fig.savefig(img_buffer, format='png')
+img_buffer.seek(0)
 
-# Trả về đường dẫn hình ảnh
-img_path
+# Chuyển đổi hình ảnh sang định dạng Base64
+img_base64 = base64.b64encode(img_buffer.read()).decode('utf-8')
+
+# Trả về Base64 hình ảnh
+img_base64
                 `;
 
-                // Run Python code in Pyodide and get image path
-                const imgPath = await pyodide.runPythonAsync(pythonScript);
+                // Run Python code in Pyodide to get Base64 encoded image
+                const imgBase64 = await pyodide.runPythonAsync(pythonScript);
 
-                // Load the image and display it
+                // Create an image element with the Base64 data
                 const img = new Image();
-                img.src = URL.createObjectURL(await fetch(imgPath).then(res => res.blob()));
+                img.src = `data:image/png;base64,${imgBase64}`;
+
+                // Append the image to the HTML
                 img.onload = () => {
                     document.getElementById('plotly-graph').appendChild(img);
                 };
+
             } catch (error) {
                 console.error("Error running Python script:", error);
             }

@@ -12,7 +12,7 @@
                 const pyodide = await loadPyodide();
 
                 // Load necessary Python packages
-                await pyodide.loadPackage(["numpy", "matplotlib", "PIL"]);
+                await pyodide.loadPackage(["numpy", "matplotlib"]);
 
                 // Define Python script for generating 3D sphere data and encoding image to Base64
                 const pythonScript = `
@@ -22,7 +22,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import math
 import io
 import base64
-from PIL import Image
 
 # Tạo dữ liệu hình cầu
 theta = np.linspace(0, 2 * math.pi, 100)

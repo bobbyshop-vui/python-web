@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Sphere with Plotly</title>
-    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
-</head>
-<body>
-    <h1>3D Sphere Visualization with Plotly</h1>
-    <py-env>
-    - plotly
-    - numpy
-    </py-env>
-    <py-script>
+    <title>3D Sphere with Plotly and Pyodide</title>
+    <script src="https://cdn.jsdelivr.net/npm/pyodide@0.22.0/pyodide.js"></script>
+    <script type="text/javascript">
+        async function runPython() {
+            // Load Pyodide
+            const pyodide = await loadPyodide();
+
+            // Load Python packages
+            await pyodide.loadPackage(["numpy", "plotly"]);
+
+            // Define Python script
+            const pythonScript = `
 import numpy as np
 import plotly.graph_objects as go
 
@@ -32,6 +34,17 @@ fig = go.Figure(data=[go.Surface(z=Z, x=X, y=Y, colorscale='Viridis')])
 
 # Hiển thị hình cầu
 fig.show()
-    </py-script>
+            `;
+
+            // Run Python script
+            await pyodide.runPythonAsync(pythonScript);
+        }
+
+        // Run Python code when the page is loaded
+        window.onload = runPython;
+    </script>
+</head>
+<body>
+    <h1>3D Sphere Visualization with Plotly and Pyodide</h1>
 </body>
 </html>

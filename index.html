@@ -3,70 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pyodide Example</title>
+    <title>Vẽ 3D với Pyodide và Canvas</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js"></script>
 </head>
 <body>
-    <h1>Pyodide với NumPy và Matplotlib</h1>
-    <button onclick="runPython()">Chạy mã Python</button>
-    <div id="output"></div>
-
-    <!-- Tải Pyodide -->
-    <script src="https://cdn.jsdelivr.net/npm/pyodide@0.23.1/pyodide.js"></script>
+    <h1>Vẽ Hình Khối 3D với Pyodide và Canvas</h1>
+    <canvas id="canvas" width="500" height="500" style="border:1px solid black;"></canvas>
     
-    <script type="text/javascript">
-        async function loadPyodideAndPackages() {
-            // Tải Pyodide và các gói cần thiết (numpy, matplotlib, cycler)
-            let pyodide = await loadPyodide();
-            await pyodide.loadPackage(["numpy", "matplotlib", "cycler"]);
-            return pyodide;
+    <button onclick="runPython()">Chạy Python và Vẽ Hình Khối</button>
+
+    <h2>Kết quả tính toán từ Python:</h2>
+    <pre id="python-output"></pre>
+
+    <script>
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+        
+        // Hàm vẽ hình vuông (2D giả lập 3D)
+        function draw3D(x, y, size) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Xóa canvas
+            ctx.beginPath();
+            ctx.rect(x, y, size, size);
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
+            ctx.fill();
         }
 
+        // Hàm chạy mã Python
         async function runPython() {
-            // Tải Pyodide và các gói
-            const pyodide = await loadPyodideAndPackages();
+            await loadPyodide(); // Chờ Pyodide tải
 
-            // Mã Python để chạy
             const pythonCode = `
-import numpy as np
-import matplotlib.pyplot as plt
-import io
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+import math
 
-# Tạo dữ liệu
-x = np.linspace(0, 10, 100)
-y = np.sin(x)
+# Tính toán các giá trị 3D đơn giản
+angle = math.pi / 4  # 45 độ
+sin_angle = math.sin(angle)
+cos_angle = math.cos(angle)
 
-# Tạo hình ảnh và vẽ đồ thị
-fig, ax = plt.subplots()
-ax.plot(x, y)
-
-# Lưu đồ thị vào bộ nhớ dưới dạng hình ảnh PNG
-buf = io.BytesIO()
-canvas = FigureCanvas(fig)
-canvas.print_png(buf)
-
-# Trả về dữ liệu hình ảnh cho JavaScript
-buf.seek(0)
-image_data = buf.getvalue()
-image_data
+# Trả về kết quả để hiển thị
+result = f"Sine: {sin_angle}, Cosine: {cos_angle}"
+result
             `;
 
-            // Thực thi mã Python
-            const result = await pyodide.runPythonAsync(pythonCode);
+            // Chạy mã Python và lấy kết quả
+            const result = pyodide.runPython(pythonCode);
+            document.getElementById("python-output").textContent = result;
 
-            // Chuyển đổi dữ liệu hình ảnh sang base64 và hiển thị trong trình duyệt
-            const base64Image = arrayBufferToBase64(result);
-            document.getElementById("output").innerHTML = `<img src="data:image/png;base64,${base64Image}" />`;
+            // Chuyển đổi giá trị sine và cosine để điều khiển vị trí vẽ
+            const angle = parseFloat(result.split(":")[1].split(",")[0]);
+            const x = (canvas.width / 2) + angle * 100;
+            const y = (canvas.height / 2) - angle * 100;
+
+            // Vẽ hình khối (2D giả lập 3D)
+            draw3D(x, y, 50);
         }
 
-        // Hàm hỗ trợ chuyển đổi ArrayBuffer thành chuỗi Base64
-        function arrayBufferToBase64(buffer) {
-            const bytes = new Uint8Array(buffer);
-            let binary = '';
-            for (let i = 0; i < bytes.length; i++) {
-                binary += String.fromCharCode(bytes[i]);
+        // Tải Pyodide
+        async function loadPyodide() {
+            if (!window.pyodide) {
+                window.pyodide = await loadPyodide();
             }
-            return window.btoa(binary);
         }
     </script>
 </body>

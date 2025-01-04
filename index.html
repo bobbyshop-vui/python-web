@@ -11,6 +11,9 @@
             // Load Pyodide
             const pyodide = await loadPyodide();
 
+            // Load numpy package
+            await pyodide.loadPackage("numpy");
+
             // Define Python script
             const pythonScript = `
 import numpy as np

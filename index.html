@@ -3,24 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Sphere with Plotly.js and Pyodide</title>
+    <title>3D Sphere with Matplotlib and Math in Pyodide</title>
     <script src="https://cdn.jsdelivr.net/npm/pyodide@0.22.0/pyodide.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.9.0/plotly.min.js"></script>
     <script type="text/javascript">
         async function runPython() {
-            // Load Pyodide
-            const pyodide = await loadPyodide();
+            try {
+                // Load Pyodide
+                const pyodide = await loadPyodide();
 
-            // Load numpy package
-            await pyodide.loadPackage("numpy");
+                // Load necessary Python packages
+                await pyodide.loadPackage(["numpy", "matplotlib"]);
 
-            // Define Python script
-            const pythonScript = `
+                // Define Python script for generating 3D sphere data
+                const pythonScript = `
 import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import math
 
 # Tạo dữ liệu hình cầu
-theta = np.linspace(0, 2 * np.pi, 100)
-phi = np.linspace(0, np.pi, 100)
+theta = np.linspace(0, 2 * math.pi, 100)
+phi = np.linspace(0, math.pi, 100)
 theta, phi = np.meshgrid(theta, phi)
 
 # Tọa độ hình cầu
@@ -29,35 +32,31 @@ X = r * np.sin(phi) * np.cos(theta)
 Y = r * np.sin(phi) * np.sin(theta)
 Z = r * np.cos(phi)
 
-# Trả về dữ liệu X, Y, Z
-X.tolist(), Y.tolist(), Z.tolist()
-            `;
+# Vẽ hình cầu 3D
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(X, Y, Z, cmap='cool')
 
-            // Run Python code and get the result
-            let result = await pyodide.runPythonAsync(pythonScript);
+# Lưu hình ảnh vào bộ nhớ dưới dạng PNG
+img_path = '/tmp/sphere.png'
+fig.savefig(img_path)
 
-            // Parse the result to extract X, Y, Z data
-            let [X, Y, Z] = JSON.parse(result);
+# Trả về đường dẫn hình ảnh
+img_path
+                `;
 
-            // Vẽ hình cầu 3D bằng Plotly.js
-            const trace = {
-                x: [].concat(...X),
-                y: [].concat(...Y),
-                z: [].concat(...Z),
-                type: 'surface',
-                colorscale: 'Viridis'
-            };
+                // Run Python code in Pyodide and get image path
+                const imgPath = await pyodide.runPythonAsync(pythonScript);
 
-            const layout = {
-                title: '3D Sphere',
-                scene: {
-                    xaxis: {title: 'X'},
-                    yaxis: {title: 'Y'},
-                    zaxis: {title: 'Z'}
-                }
-            };
-
-            Plotly.newPlot('plotly-graph', [trace], layout);
+                // Load the image and display it
+                const img = new Image();
+                img.src = URL.createObjectURL(await fetch(imgPath).then(res => res.blob()));
+                img.onload = () => {
+                    document.getElementById('plotly-graph').appendChild(img);
+                };
+            } catch (error) {
+                console.error("Error running Python script:", error);
+            }
         }
 
         // Run Python code when the page is loaded
@@ -65,7 +64,7 @@ X.tolist(), Y.tolist(), Z.tolist()
     </script>
 </head>
 <body>
-    <h1>3D Sphere Visualization with Plotly.js and Pyodide</h1>
-    <div id="plotly-graph" style="height: 600px;"></div>
+    <h1>3D Sphere Visualization with Matplotlib and Math in Pyodide</h1>
+    <div id="plotly-graph"></div>
 </body>
 </html>

@@ -1,66 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pyodide Example</title>
 </head>
 <body>
-    <h1>Pyodide with NumPy and Matplotlib</h1>
-    <button onclick="runPython()">Run Python Code</button>
+    <h1>Pyodide với NumPy và Matplotlib</h1>
+    <button onclick="runPython()">Chạy mã Python</button>
     <div id="output"></div>
 
-    <!-- Load Pyodide -->
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.1/pyodide.js"></script>
+    <!-- Tải Pyodide -->
+    <script src="https://cdn.jsdelivr.net/npm/pyodide@0.23.1/pyodide.js"></script>
     
     <script type="text/javascript">
         async function loadPyodideAndPackages() {
-            // Load Pyodide and the necessary packages (numpy, matplotlib, cycler)
+            // Tải Pyodide và các gói cần thiết (numpy, matplotlib, cycler)
             let pyodide = await loadPyodide();
             await pyodide.loadPackage(["numpy", "matplotlib", "cycler"]);
             return pyodide;
         }
 
         async function runPython() {
-            // Load Pyodide and packages
+            // Tải Pyodide và các gói
             const pyodide = await loadPyodideAndPackages();
 
-            // Python code to run
+            // Mã Python để chạy
             const pythonCode = `
 import numpy as np
 import matplotlib.pyplot as plt
 import io
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from IPython.display import display
 
-# Generate some data
+# Tạo dữ liệu
 x = np.linspace(0, 10, 100)
 y = np.sin(x)
 
-# Create a figure and plot
+# Tạo hình ảnh và vẽ đồ thị
 fig, ax = plt.subplots()
 ax.plot(x, y)
 
-# Save plot to a PNG image in a memory buffer
+# Lưu đồ thị vào bộ nhớ dưới dạng hình ảnh PNG
 buf = io.BytesIO()
 canvas = FigureCanvas(fig)
 canvas.print_png(buf)
 
-# Return the image data to JavaScript
+# Trả về dữ liệu hình ảnh cho JavaScript
 buf.seek(0)
 image_data = buf.getvalue()
 image_data
             `;
 
-            // Execute the Python code
+            // Thực thi mã Python
             const result = await pyodide.runPythonAsync(pythonCode);
 
-            // Convert image data to base64 and display it in the browser
+            // Chuyển đổi dữ liệu hình ảnh sang base64 và hiển thị trong trình duyệt
             const base64Image = arrayBufferToBase64(result);
             document.getElementById("output").innerHTML = `<img src="data:image/png;base64,${base64Image}" />`;
         }
 
-        // Helper function to convert ArrayBuffer to Base64 string
+        // Hàm hỗ trợ chuyển đổi ArrayBuffer thành chuỗi Base64
         function arrayBufferToBase64(buffer) {
             const bytes = new Uint8Array(buffer);
             let binary = '';

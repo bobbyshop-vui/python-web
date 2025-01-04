@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vẽ 3D với Pyodide và Canvas</title>
+    <title>Vẽ Hình Khối 3D với Pyodide và Canvas</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js"></script>
 </head>
 <body>
     <h1>Vẽ Hình Khối 3D với Pyodide và Canvas</h1>
     <canvas id="canvas" width="500" height="500" style="border:1px solid black;"></canvas>
-    
-    <button onclick="runPython()">Chạy Python và Vẽ Hình Khối</button>
 
     <h2>Kết quả tính toán từ Python:</h2>
     <pre id="python-output"></pre>
@@ -29,8 +27,8 @@
             ctx.fill();
         }
 
-        // Hàm chạy mã Python
-        async function runPython() {
+        // Hàm chạy mã Python và vẽ hình
+        async function runPythonAndDraw() {
             await loadPyodide(); // Chờ Pyodide tải
 
             const pythonCode = `
@@ -59,12 +57,15 @@ result
             draw3D(x, y, 50);
         }
 
-        // Tải Pyodide
+        // Tải Pyodide và chạy mã Python tự động
         async function loadPyodide() {
             if (!window.pyodide) {
                 window.pyodide = await loadPyodide();
             }
+            runPythonAndDraw(); // Gọi hàm chạy mã Python khi tải Pyodide xong
         }
+
+        loadPyodide(); // Gọi hàm tải Pyodide ngay khi trang tải
     </script>
 </body>
 </html>

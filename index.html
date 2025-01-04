@@ -3,20 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Sphere with Plotly and Pyodide</title>
+    <title>3D Sphere with Plotly.js and Pyodide</title>
     <script src="https://cdn.jsdelivr.net/npm/pyodide@0.22.0/pyodide.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.9.0/plotly.min.js"></script>
     <script type="text/javascript">
         async function runPython() {
             // Load Pyodide
             const pyodide = await loadPyodide();
 
-            // Load Python packages
-            await pyodide.loadPackage(["numpy", "plotly"]);
-
             // Define Python script
             const pythonScript = `
 import numpy as np
-import plotly.graph_objects as go
 
 # Tạo dữ liệu hình cầu
 theta = np.linspace(0, 2 * np.pi, 100)
@@ -29,15 +26,35 @@ X = r * np.sin(phi) * np.cos(theta)
 Y = r * np.sin(phi) * np.sin(theta)
 Z = r * np.cos(phi)
 
-# Vẽ hình cầu 3D bằng Plotly
-fig = go.Figure(data=[go.Surface(z=Z, x=X, y=Y, colorscale='Viridis')])
-
-# Hiển thị hình cầu
-fig.show()
+# Trả về dữ liệu X, Y, Z
+X.tolist(), Y.tolist(), Z.tolist()
             `;
 
-            // Run Python script
-            await pyodide.runPythonAsync(pythonScript);
+            // Run Python code and get the result
+            let result = await pyodide.runPythonAsync(pythonScript);
+
+            // Parse the result to extract X, Y, Z data
+            let [X, Y, Z] = JSON.parse(result);
+
+            // Vẽ hình cầu 3D bằng Plotly.js
+            const trace = {
+                x: [].concat(...X),
+                y: [].concat(...Y),
+                z: [].concat(...Z),
+                type: 'surface',
+                colorscale: 'Viridis'
+            };
+
+            const layout = {
+                title: '3D Sphere',
+                scene: {
+                    xaxis: {title: 'X'},
+                    yaxis: {title: 'Y'},
+                    zaxis: {title: 'Z'}
+                }
+            };
+
+            Plotly.newPlot('plotly-graph', [trace], layout);
         }
 
         // Run Python code when the page is loaded
@@ -45,6 +62,7 @@ fig.show()
     </script>
 </head>
 <body>
-    <h1>3D Sphere Visualization with Plotly and Pyodide</h1>
+    <h1>3D Sphere Visualization with Plotly.js and Pyodide</h1>
+    <div id="plotly-graph" style="height: 600px;"></div>
 </body>
 </html>

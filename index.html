@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Sphere with Plotly</title>
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+</head>
+<body>
+    <h1>3D Sphere Visualization with Plotly</h1>
+    <py-env>
+    - plotly
+    - numpy
+    </py-env>
+    <py-script>
+import numpy as np
+import plotly.graph_objects as go
+
+# Tạo dữ liệu hình cầu
+theta = np.linspace(0, 2 * np.pi, 100)
+phi = np.linspace(0, np.pi, 100)
+theta, phi = np.meshgrid(theta, phi)
+
+# Tọa độ hình cầu
+r = 3  # bán kính
+X = r * np.sin(phi) * np.cos(theta)
+Y = r * np.sin(phi) * np.sin(theta)
+Z = r * np.cos(phi)
+
+# Vẽ hình cầu 3D bằng Plotly
+fig = go.Figure(data=[go.Surface(z=Z, x=X, y=Y, colorscale='Viridis')])
+
+# Hiển thị hình cầu
+fig.show()
+    </py-script>
+</body>
+</html>

@@ -3,77 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Sphere with Matplotlib and Math in Pyodide</title>
-    <script src="https://cdn.jsdelivr.net/npm/pyodide@0.22.0/pyodide.js"></script>
-    <script type="text/javascript">
-        async function runPython() {
-            try {
-                // Load Pyodide
-                const pyodide = await loadPyodide();
-
-                // Load necessary Python packages
-                await pyodide.loadPackage(["numpy", "matplotlib"]);
-
-                // Define Python script for generating 3D sphere data and encoding image to Base64
-                const pythonScript = `
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import math
-import io
-import base64
-
-# Tạo dữ liệu hình cầu
-theta = np.linspace(0, 2 * math.pi, 100)
-phi = np.linspace(0, math.pi, 100)
-theta, phi = np.meshgrid(theta, phi)
-
-# Tọa độ hình cầu
-r = 3  # bán kính
-X = r * np.sin(phi) * np.cos(theta)
-Y = r * np.sin(phi) * np.sin(theta)
-Z = r * np.cos(phi)
-
-# Vẽ hình cầu 3D
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.plot_surface(X, Y, Z, cmap='cool')
-
-# Lưu hình ảnh vào bộ nhớ dưới dạng PNG
-img_buffer = io.BytesIO()
-fig.savefig(img_buffer, format='png')
-img_buffer.seek(0)
-
-# Chuyển đổi hình ảnh sang định dạng Base64
-img_base64 = base64.b64encode(img_buffer.read()).decode('utf-8')
-
-# Trả về Base64 hình ảnh
-img_base64
-                `;
-
-                // Run Python code in Pyodide to get Base64 encoded image
-                const imgBase64 = await pyodide.runPythonAsync(pythonScript);
-
-                // Create an image element with the Base64 data
-                const img = new Image();
-                img.src = `data:image/png;base64,${imgBase64}`;
-
-                // Append the image to the HTML
-                img.onload = () => {
-                    document.getElementById('plotly-graph').appendChild(img);
-                };
-
-            } catch (error) {
-                console.error("Error running Python script:", error);
-            }
-        }
-
-        // Run Python code when the page is loaded
-        window.onload = runPython;
-    </script>
+    <title>Pyodide Example</title>
 </head>
 <body>
-    <h1>3D Sphere Visualization with Matplotlib and Math in Pyodide</h1>
-    <div id="plotly-graph"></div>
+    <h1>Pyodide with NumPy and Matplotlib</h1>
+    <button onclick="runPython()">Run Python Code</button>
+    <div id="output"></div>
+
+    <!-- Load Pyodide -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.1/pyodide.js"></script>
+    
+    <script type="text/javascript">
+        async function loadPyodideAndPackages() {
+            // Load Pyodide and the necessary packages (numpy, matplotlib, cycler)
+            let pyodide = await loadPyodide();
+            await pyodide.loadPackage(["numpy", "matplotlib", "cycler"]);
+            return pyodide;
+        }
+
+        async function runPython() {
+            // Load Pyodide and packages
+            const pyodide = await loadPyodideAndPackages();
+
+            // Python code to run
+            const pythonCode = `
+import numpy as np
+import matplotlib.pyplot as plt
+import io
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from IPython.display import display
+
+# Generate some data
+x = np.linspace(0, 10, 100)
+y = np.sin(x)
+
+# Create a figure and plot
+fig, ax = plt.subplots()
+ax.plot(x, y)
+
+# Save plot to a PNG image in a memory buffer
+buf = io.BytesIO()
+canvas = FigureCanvas(fig)
+canvas.print_png(buf)
+
+# Return the image data to JavaScript
+buf.seek(0)
+image_data = buf.getvalue()
+image_data
+            `;
+
+            // Execute the Python code
+            const result = await pyodide.runPythonAsync(pythonCode);
+
+            // Convert image data to base64 and display it in the browser
+            const base64Image = arrayBufferToBase64(result);
+            document.getElementById("output").innerHTML = `<img src="data:image/png;base64,${base64Image}" />`;
+        }
+
+        // Helper function to convert ArrayBuffer to Base64 string
+        function arrayBufferToBase64(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+    </script>
 </body>
 </html>
